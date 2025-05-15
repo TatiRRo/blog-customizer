@@ -1,6 +1,8 @@
 import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
 import { useOutsideClickClose } from 'src/ui/select/hooks/useOutsideClickClose';
+import { Separator } from 'src/ui/separator';
+import { Text } from 'src/ui/text';
 
 import styles from './ArticleParamsForm.module.scss';
 import clsx from 'clsx';
@@ -14,29 +16,41 @@ import {
 	contentWidthArr,
 	OptionType,
 	ArticleStateType,
+	defaultArticleState,
 } from 'src/constants/articleProps';
 
 import { Select } from 'src/ui/select';
 import { RadioGroup } from 'src/ui/radio-group';
 
 type Props = {
-	articleState: ArticleStateType;
-	onChange: (key: keyof ArticleStateType, value: OptionType) => void;
-	onApply: () => void;
-	onReset: () => void;
+	onApply: (newState: ArticleStateType) => void;
 };
 
-export const ArticleParamsForm = ({
-	articleState,
-	onChange,
-	onApply,
-	onReset,
-}: Props) => {
+export const ArticleParamsForm = ({ onApply }: Props) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const [draftState, setDraftState] =
+		useState<ArticleStateType>(defaultArticleState);
 
 	const toggleOpen = () => {
 		setIsOpen((prev) => !prev);
+	};
+
+	const handleDraftChange = (
+		key: keyof ArticleStateType,
+		value: OptionType
+	) => {
+		setDraftState((prev) => ({ ...prev, [key]: value }));
+	};
+
+	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		onApply(draftState);
+	};
+
+	const handleReset = () => {
+		setDraftState(defaultArticleState);
+		onApply(defaultArticleState);
 	};
 
 	useOutsideClickClose({
@@ -52,44 +66,43 @@ export const ArticleParamsForm = ({
 				ref={containerRef}
 				tabIndex={0}
 				className={clsx(styles.container, { [styles.container_open]: isOpen })}>
-				<form
-					className={styles.form}
-					onSubmit={(e) => {
-						e.preventDefault();
-						onApply();
-					}}>
+				<form className={styles.form} onSubmit={handleSubmit}>
+					<Text as='h1' size={31} weight={800} uppercase>
+						Задайте параметры
+					</Text>
 					<Select
 						options={fontFamilyOptions}
-						selected={articleState.fontFamilyOption}
-						onChange={(value) => onChange('fontFamilyOption', value)}
+						selected={draftState.fontFamilyOption}
+						onChange={(value) => handleDraftChange('fontFamilyOption', value)}
 						title='Шрифт'
 						placeholder='Выберите шрифт'
 					/>
 					<RadioGroup
 						name='font-size'
 						options={fontSizeOptions}
-						selected={articleState.fontSizeOption}
-						onChange={(value) => onChange('fontSizeOption', value)}
+						selected={draftState.fontSizeOption}
+						onChange={(value) => handleDraftChange('fontSizeOption', value)}
 						title='Размер шрифта'
 					/>
 					<Select
 						options={fontColors}
-						selected={articleState.fontColor}
-						onChange={(value) => onChange('fontColor', value)}
-						title='Цвет текста'
+						selected={draftState.fontColor}
+						onChange={(value) => handleDraftChange('fontColor', value)}
+						title='Цвет шрифта'
 						placeholder='Выберите цвет'
 					/>
+					<Separator />
 					<Select
 						options={backgroundColors}
-						selected={articleState.backgroundColor}
-						onChange={(value) => onChange('backgroundColor', value)}
-						title='Фон'
+						selected={draftState.backgroundColor}
+						onChange={(value) => handleDraftChange('backgroundColor', value)}
+						title='Цвет фона'
 						placeholder='Выберите фон'
 					/>
 					<Select
 						options={contentWidthArr}
-						selected={articleState.contentWidth}
-						onChange={(value) => onChange('contentWidth', value)}
+						selected={draftState.contentWidth}
+						onChange={(value) => handleDraftChange('contentWidth', value)}
 						title='Ширина контента'
 						placeholder='Выберите ширину'
 					/>
@@ -98,14 +111,9 @@ export const ArticleParamsForm = ({
 							title='Сбросить'
 							htmlType='reset'
 							type='clear'
-							onClick={onReset}
+							onClick={handleReset}
 						/>
-						<Button
-							title='Применить'
-							htmlType='submit'
-							type='apply'
-							onClick={onApply}
-						/>
+						<Button title='Применить' htmlType='submit' type='apply' />
 					</div>
 				</form>
 			</aside>
